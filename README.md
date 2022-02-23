@@ -5,7 +5,7 @@ Base58Check & WIF for PubKeyHash and PrivateKeys
 ## Base58Check
 
 - 1 byte **Version**
-- 16 bytes **Compressed Public Key**
+- 16 bytes "Compressed" **Public Key Hash**
 - 4 bytes **Checksum**
 
 ```txt
@@ -24,7 +24,7 @@ XxJ7EZT2VyJ821LeAzoT9aDDSuempCikd3
 
 - 1 byte **Version**
 - 32 bytes **Private Key**
-- 1 byte (Optional) **Has Compressed Key**
+- 1 byte (Optional) **Has Compressed Public Key**
 - 4 bytes **Checksum**
 
 ```txt

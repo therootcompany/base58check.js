@@ -4,6 +4,30 @@ Base58Check & WIF for Public Key Hash addresses and Private Keys
 
 ## Usage
 
+Can convert Public Key Hashes and Private Keys between Hex, Base58Check, and
+WIF.
+
+### CLI
+
+```bash
+npm install -g @root/base58check
+```
+
+```bash
+# base58check <key> [version]
+
+base58check XfMBLVNyzPxEELVUUsg7AJAHWKiV9do7Pj
+# {
+#   "version": "4c",
+#   "pubKeyHash": "3320974335dc4888b501e965fe5ff3c4421c09c4"
+# }
+
+base58check 3320974335dc4888b501e965fe5ff3c4421c09c4 4c
+# XfMBLVNyzPxEELVUUsg7AJAHWKiV9do7Pj
+```
+
+### Node.js
+
 ```bash
 npm install --save @root/base58check
 ```

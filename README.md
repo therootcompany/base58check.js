@@ -1,8 +1,56 @@
 # @root/base58check
 
-Base58Check & WIF for PubKeyHash and PrivateKeys
+Base58Check & WIF for Public Key Hash addresses and Private Keys
 
-## Base58Check
+## Usage
+
+```bash
+npm install --save @root/base58check
+```
+
+```js
+let Base58Check = require("base58check").Base58Check;
+
+let b58c = Base58Check.create();
+
+// Public Key Hash
+let pkh = `XfMBLVNyzPxEELVUUsg7AJAHWKiV9do7Pj`;
+let parts = await b58c.verify(pkh);
+/*
+    {
+      "version": "4c",
+      "pubKeyHash": "3320974335dc4888b501e965fe5ff3c4421c09c4",
+      "check": "9e5443ee"
+    }
+ */
+
+// Private Key
+let wif = "XE7KZ98bqtbomihJqkuRzi6DusLAXegQFBmnATDAUVSCxtcbigHb";
+let parts = await b58c.verify(wif);
+/*
+    {
+      "version": "cc",
+      "privateKey": "543519e8a781d6986377df6ec18c76fceb270697f16f204408af72edc4fe70de",
+      "compressed": true,
+      "check": "24aeb2e6"
+    }
+ */
+```
+
+### Options
+
+You can enforce your instance of Base58Check to verify and generate a particular
+_version_ of coin, or to use a different Base58 dictionary.
+
+```js
+Base58Check.create({
+  pubKeyHashVersion: `4c`, // Dash (`00` for Bitcoin)
+  privateKeyVersion: `cc`, // Dash (`80` for Bitcoin)
+  dictionary: `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`,
+});
+```
+
+## Base58Check Summary
 
 - 1 byte **Version**
 - 16 bytes "Compressed" **Public Key Hash**

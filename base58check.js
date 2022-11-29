@@ -109,15 +109,6 @@ Base58Check.create = function (opts) {
     let key = parts.pubKeyHash || parts.privateKey;
     let compressed = parts.compressed ?? true;
 
-    if (66 === key.length && "01" === key.slice(-2)) {
-      key.slice(0, 64);
-      compressed = true;
-    }
-
-    if (64 === key.length && compressed) {
-      key += "01";
-    }
-
     if (40 === key.length) {
       if (!parts.version) {
         parts.version = pubKeyHashVersion || "00";
@@ -130,6 +121,17 @@ Base58Check.create = function (opts) {
         throw new Error("[@root/base58check] public key hash version mismatch");
       }
     } else {
+      if (66 === key.length && "01" === key.slice(-2)) {
+        //key.slice(0, 64);
+        compressed = true;
+      } else if (64 === key.length && compressed) {
+        key += "01";
+      } else {
+        throw new Error(
+          `[@root/base58check] ${key.length} is not a valid key length, should be 66, 64, or 40 bytes`
+        );
+      }
+
       if (!parts.version) {
         parts.version = privateKeyVersion || "80";
       }

@@ -106,7 +106,6 @@ Base58Check.create = function (opts) {
   };
 
   b58c.encodeHex = async function (parts) {
-    let check = await b58c.checksum(parts);
     let key = parts.pubKeyHash || parts.privateKey;
     let compressed = parts.compressed ?? true;
 
@@ -142,6 +141,9 @@ Base58Check.create = function (opts) {
         throw new Error("[@root/base58check] private key version mismatch");
       }
     }
+
+    // after version is set
+    let check = await b58c.checksum(parts);
 
     return `${parts.version}${key}${check}`;
   };

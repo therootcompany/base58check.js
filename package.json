@@ -1,11 +1,8 @@
 {
-  "name": "@root/base58check",
+  "name": "@dashincubator/base58check",
   "version": "1.0.1",
   "description": "Base58Check & WIF for PubKeyHash and PrivateKeys",
   "main": "base58check.js",
-  "browser": {
-    "./lib/sha256.js": "./lib/sha256-browser.js"
-  },
   "bin": {
     "base58check": "./bin/base58check.js"
   },
@@ -15,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/therootcompany/base58check.js.git"
+    "url": "git+https://github.com/dashhive/base58check.js.git"
   },
   "keywords": [
     "base58",
@@ -27,10 +24,7 @@
   "author": "AJ ONeal <aj@therootcompany.com> (https://therootcompany.com/)",
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {
-    "url": "https://github.com/therootcompany/base58check.js/issues"
+    "url": "https://github.com/dashhive/base58check.js/issues"
   },
-  "homepage": "https://github.com/therootcompany/base58check.js#readme",
-  "dependencies": {
-    "base-x": "^4.0.0"
-  }
+  "homepage": "https://github.com/dashhive/base58check.js#readme"
 }

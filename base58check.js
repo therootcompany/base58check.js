@@ -160,6 +160,9 @@ Base58Check.create = function (opts) {
 // Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+//
+// Taken from https://github.com/therootcompany/base62.js
+// which is a fork of https://github.com/cryptocoinjs/base-x
 
 /**
  * @param {String} ALPHABET
@@ -365,4 +368,5 @@ function uint8ArrayToHex(buf) {
 }
 
 exports.Base58Check = Base58Check;
+exports.Base58 = BaseX;
 exports.BaseX = BaseX;

@@ -7,6 +7,7 @@
     "base58check": "./bin/base58check.js"
   },
   "scripts": {
+    "fmt": "npx prettier@2 --write '*/**.{js,md}' ",
     "test": "node base58check-test.js",
     "version": "npm version -m \"chore(release): bump to v%s\""
   },

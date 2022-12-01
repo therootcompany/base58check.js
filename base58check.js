@@ -52,7 +52,7 @@
       if (parts.pubKeyHash) {
         if (parts.privateKey) {
           throw new Error(
-            `[@root/base58check] either 'privateKey' or 'pubKeyHash' must exist, but not both`
+            `[@dashincubator/base58check] either 'privateKey' or 'pubKeyHash' must exist, but not both`
           );
         }
       }
@@ -69,7 +69,7 @@
       if (parts.privateKey) {
         if (parts.version === pubKeyHashVersion) {
           throw new Error(
-            `[@root/base58check] '${parts.version}' is a public version, but the given key is private`
+            `[@dashincubator/base58check] '${parts.version}' is a public version, but the given key is private`
           );
         }
         return;
@@ -78,7 +78,7 @@
       if (parts.pubKeyHash) {
         if (parts.version === privateKeyVersion) {
           throw new Error(
-            `[@root/base58check] '${parts.version}' is a private version, but the given key is a pubKeyHash`
+            `[@dashincubator/base58check] '${parts.version}' is a private version, but the given key is a pubKeyHash`
           );
         }
       }
@@ -162,7 +162,7 @@
       }
 
       throw new Error(
-        `[@root/base58check] either 'privateKey' or 'pubKeyHash' must exist to encode`
+        `[@dashincubator/base58check] either 'privateKey' or 'pubKeyHash' must exist to encode`
       );
     };
 
@@ -181,7 +181,7 @@
           aCompressed = "an uncompressed";
         }
         throw new Error(
-          `[@root/base58check] ${key.length} is not a valid length for ${aCompressed} private key - it should be 33 (compressed) or 32 (uncompressed) bytes (66 or 64 hex chars)`
+          `[@dashincubator/base58check] ${key.length} is not a valid length for ${aCompressed} private key - it should be 33 (compressed) or 32 (uncompressed) bytes (66 or 64 hex chars)`
         );
       }
 
@@ -198,7 +198,7 @@
 
       if (40 !== key.length) {
         throw new Error(
-          `[@root/base58check] ${key.length} is not a valid pub key hash length, should be 20 bytes (40 hex chars)`
+          `[@dashincubator/base58check] ${key.length} is not a valid pub key hash length, should be 20 bytes (40 hex chars)`
         );
       }
 

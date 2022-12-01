@@ -30,17 +30,58 @@
     let b58c = {};
 
     b58c.checksum = async function (parts) {
+      b58c._setVersion(parts);
+      parts.compressed = parts.compressed ?? true;
+
       let key = parts.pubKeyHash || parts.privateKey;
+      let compression = "";
       if (parts.compressed && 64 === key.length) {
-        key += "01";
+        compression = "01";
       }
-      let hex = `${parts.version}${key}`;
+
+      let hex = `${parts.version}${key}${compression}`;
       let buf = hexToUint8Array(hex);
       let hash1 = await sha256sum(buf);
       let hash2 = await sha256sum(hash1);
 
       let check = uint8ArrayToHex(hash2.slice(0, 4));
       return check;
+    };
+
+    b58c._setVersion = function (parts) {
+      if (parts.pubKeyHash) {
+        if (parts.privateKey) {
+          throw new Error(
+            `[@root/base58check] either 'privateKey' or 'pubKeyHash' must exist, but not both`
+          );
+        }
+      }
+
+      if (!parts.version) {
+        if (parts.privateKey) {
+          parts.version = privateKeyVersion;
+        } else if (parts.pubKeyHash) {
+          parts.version = pubKeyHashVersion;
+        }
+        return;
+      }
+
+      if (parts.privateKey) {
+        if (parts.version === pubKeyHashVersion) {
+          throw new Error(
+            `[@root/base58check] '${parts.version}' is a public version, but the given key is private`
+          );
+        }
+        return;
+      }
+
+      if (parts.pubKeyHash) {
+        if (parts.version === privateKeyVersion) {
+          throw new Error(
+            `[@root/base58check] '${parts.version}' is a private version, but the given key is a pubKeyHash`
+          );
+        }
+      }
     };
 
     b58c.verify = async function (b58Addr) {
@@ -52,9 +93,13 @@
     b58c.verifyHex = async function (base58check, opts) {
       let parts = b58c.decodeHex(base58check, opts);
       let check = await b58c.checksum(parts);
+      let valid = parts.check === check;
 
-      if (parts.check !== check) {
-        throw new Error(`expected '${parts.check}', but got '${check}'`);
+      if (!valid) {
+        if (false !== opts?.verify) {
+          throw new Error(`expected '${parts.check}', but got '${check}'`);
+        }
+        parts.valid = valid;
       }
 
       return parts;
@@ -77,21 +122,22 @@
       }
 
       let version = addr.slice(0, 2);
-      let versions = [pubKeyHashVersion, privateKeyVersion].filter(Boolean);
-      if (versions.length && !versions.includes(version)) {
+      let versions = [pubKeyHashVersion, privateKeyVersion];
+      if (!versions.includes(version)) {
         throw new Error(
-          `expected Dash pubKeyHash (or privateKey) to start with 0x${pubKeyHashVersion} (or 0x${privateKeyVersion}), not '0x${version}'`
+          `[@dashincubator/base58check] expected pubKeyHash (or privateKey) to start with 0x${pubKeyHashVersion} (or 0x${privateKeyVersion}), not '0x${version}'`
         );
       }
 
       let rawAddr = addr.slice(2, -8);
       if (50 === addr.length) {
         return {
-          version,
+          version: version,
           pubKeyHash: rawAddr,
           check: addr.slice(-8),
         };
       }
+
       return {
         version,
         privateKey: rawAddr.slice(0, 64),
@@ -107,45 +153,56 @@
     };
 
     b58c.encodeHex = async function (parts) {
-      let key = parts.pubKeyHash || parts.privateKey;
-      let compressed = parts.compressed ?? true;
-
-      if (40 === key.length) {
-        if (!parts.version) {
-          parts.version = pubKeyHashVersion || "00";
-        }
-        if (
-          pubKeyHashVersion &&
-          parts.version &&
-          parts.version !== pubKeyHashVersion
-        ) {
-          throw new Error(
-            "[@root/base58check] public key hash version mismatch"
-          );
-        }
-      } else {
-        if (66 === key.length && "01" === key.slice(-2)) {
-          //key.slice(0, 64);
-          compressed = true;
-        } else if (64 === key.length && compressed) {
-          key += "01";
-        } else {
-          throw new Error(
-            `[@root/base58check] ${key.length} is not a valid key length, should be 66, 64, or 40 bytes`
-          );
-        }
-
-        if (!parts.version) {
-          parts.version = privateKeyVersion || "80";
-        }
-        if (
-          privateKeyVersion &&
-          parts.version &&
-          parts.version !== privateKeyVersion
-        ) {
-          throw new Error("[@root/base58check] private key version mismatch");
-        }
+      if (parts.pubKeyHash) {
+        return await b58c._encodePubKeyHashHex(parts);
       }
+
+      if (parts.privateKey) {
+        return await b58c._encodePrivateKeyHex(parts);
+      }
+
+      throw new Error(
+        `[@root/base58check] either 'privateKey' or 'pubKeyHash' must exist to encode`
+      );
+    };
+
+    b58c._encodePrivateKeyHex = async function (parts) {
+      parts.compressed = parts.compressed ?? true;
+
+      let key = parts.privateKey;
+      if (66 === key.length && "01" === key.slice(-2)) {
+        //key.slice(0, 64);
+        parts.compressed = true;
+      } else if (64 === key.length && parts.compressed) {
+        key += "01";
+      } else {
+        let aCompressed = "a compressed";
+        if (!parts.compressed) {
+          aCompressed = "an uncompressed";
+        }
+        throw new Error(
+          `[@root/base58check] ${key.length} is not a valid length for ${aCompressed} private key - it should be 33 (compressed) or 32 (uncompressed) bytes (66 or 64 hex chars)`
+        );
+      }
+
+      b58c._setVersion(parts);
+
+      // after version and compression are set
+      let check = await b58c.checksum(parts);
+
+      return `${parts.version}${key}${check}`;
+    };
+
+    b58c._encodePubKeyHashHex = async function (parts) {
+      let key = parts.pubKeyHash;
+
+      if (40 !== key.length) {
+        throw new Error(
+          `[@root/base58check] ${key.length} is not a valid pub key hash length, should be 20 bytes (40 hex chars)`
+        );
+      }
+
+      b58c._setVersion(parts);
 
       // after version is set
       let check = await b58c.checksum(parts);

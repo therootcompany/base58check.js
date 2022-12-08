@@ -45,7 +45,7 @@
       }
 
       let hex = `${parts.version}${key}${compression}`;
-      let check = await b58c.checksumUnsafe(hex);
+      let check = await b58c._checksumHexRaw(hex);
 
       return check;
     };

@@ -21,10 +21,15 @@
    * @param {String} [opts.dictionary] - "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz" for Dash / Bitcoin Base58
    */
   Base58Check.create = function (opts) {
+    let dictionary = opts?.dictionary || BASE58;
     // See https://github.com/dashhive/dashkeys.js/blob/1f0f4e0d0aabf9e68d94925d660f00666f502391/dashkeys.js#L38
     let pubKeyHashVersion = opts?.pubKeyHashVersion || "4c";
     let privateKeyVersion = opts?.privateKeyVersion || "cc";
-    let dictionary = opts?.dictionary || BASE58;
+    // From https://bitcoin.stackexchange.com/questions/38878/how-does-the-bip32-version-bytes-convert-to-base58
+    // 0x043587cf for testnet
+    let xpubVersion = opts?.xpubVersion || "0488b21e"; // base58-encoded "xpub..."
+    // 0x04358394 for testnet
+    let xprvVersion = opts?.xprvVersion || "0488ade4"; // base58-encoded "xprv..."
 
     let bs58 = BaseX.createEncoder(dictionary);
     let b58c = {};
@@ -40,11 +45,18 @@
       }
 
       let hex = `${parts.version}${key}${compression}`;
+      let check = await b58c.checksumUnsafe(hex);
+
+      return check;
+    };
+
+    b58c._checksumHexRaw = async function (hex) {
       let buf = hexToUint8Array(hex);
       let hash1 = await sha256sum(buf);
       let hash2 = await sha256sum(hash1);
 
-      let check = uint8ArrayToHex(hash2.slice(0, 4));
+      let last4 = hash2.slice(0, 4);
+      let check = uint8ArrayToHex(last4);
       return check;
     };
 
@@ -113,23 +125,34 @@
 
     // decode b58c
     b58c.decodeHex = function (addr, opts = {}) {
+      let version = addr.slice(0, privateKeyVersion.length);
+      let versions = [pubKeyHashVersion, privateKeyVersion];
+      let xversions = [xpubVersion, xprvVersion];
+      let isXKey = false;
+
+      if (!versions.includes(version)) {
+        let xversion = addr.slice(0, xprvVersion.length);
+        isXKey = xversions.includes(xversion);
+        if (!isXKey) {
+          // TODO xkeys
+          throw new Error(
+            `[@dashincubator/base58check] expected pubKeyHash (or privateKey) to start with 0x${pubKeyHashVersion} (or 0x${privateKeyVersion}), not '0x${version}'`
+          );
+        }
+        version = xversion;
+      }
+
       // Public Key Hash: 1 + 20 + 4 // 50 hex
       // Private Key: 1 + 32 + 1 + 4 // 74 or 76 hex
       if (![50, 74, 76].includes(addr.length)) {
-        throw new Error(
-          `pubKeyHash (or privateKey) isn't as long as expected (should be 50, 74, or 76 hex chars, not ${addr.length})`
-        );
+        if (!isXKey) {
+          throw new Error(
+            `pubKeyHash (or privateKey) isn't as long as expected (should be 50, 74, or 76 hex chars, not ${addr.length})`
+          );
+        }
       }
 
-      let version = addr.slice(0, 2);
-      let versions = [pubKeyHashVersion, privateKeyVersion];
-      if (!versions.includes(version)) {
-        throw new Error(
-          `[@dashincubator/base58check] expected pubKeyHash (or privateKey) to start with 0x${pubKeyHashVersion} (or 0x${privateKeyVersion}), not '0x${version}'`
-        );
-      }
-
-      let rawAddr = addr.slice(2, -8);
+      let rawAddr = addr.slice(version.length, -8);
       if (50 === addr.length) {
         return {
           version: version,
@@ -138,8 +161,23 @@
         };
       }
 
+      if (isXKey) {
+        if (version === xprvVersion) {
+          return {
+            version: version,
+            xprv: rawAddr,
+            check: addr.slice(-8),
+          };
+        }
+        return {
+          version: version,
+          xpub: rawAddr,
+          check: addr.slice(-8),
+        };
+      }
+
       return {
-        version,
+        version: version,
         privateKey: rawAddr.slice(0, 64),
         compressed: "01" === rawAddr.slice(64),
         check: addr.slice(-8),
@@ -147,6 +185,15 @@
     };
 
     b58c.encode = async function (parts) {
+      if (parts.xprv) {
+        let version = parts.version || xprvVersion;
+        return await b58c._encodeXKey(`${version}${parts.xprv}`);
+      }
+      if (parts.xpub) {
+        let version = parts.version || xpubVersion;
+        return await b58c._encodeXKey(`${version}${parts.xpub}`);
+      }
+
       let hex = await b58c.encodeHex(parts);
       let u8 = hexToUint8Array(hex);
       return bs58.encode(u8);
@@ -164,6 +211,12 @@
       throw new Error(
         `[@dashincubator/base58check] either 'privateKey' or 'pubKeyHash' must exist to encode`
       );
+    };
+
+    b58c._encodeXKey = async function (versionAndKeyHex) {
+      let checkHex = await b58c._checksumHexRaw(versionAndKeyHex);
+      let u8 = hexToUint8Array(`${versionAndKeyHex}${checkHex}`);
+      return bs58.encode(u8);
     };
 
     b58c._encodePrivateKeyHex = async function (parts) {

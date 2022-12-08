@@ -59,6 +59,28 @@ let parts = await b58c.verify(wif);
       "check": "24aeb2e6"
     }
  */
+
+// Extended Public Key
+let xpub = `xpub6EtdcAi4VMbZRDgSaA1WmrqB8asuswgz1toia3YULccxyJXYqdxwqFgeEexVxr8ytJPHZYTrhbYJjqaFumih45awabyaHwUmCvXbGf7sujG`;
+let parts = await b58c.decode(xpub); // TODO checksum not checked
+/*
+    {
+      "version": "0488b21e",
+      "pubKeyHash": "04832a89a60000000091dbdc89637be3d19851998ba2fac7f85b03b28a65de5c284899e7608f25ee4f0238eddc6cf0b2e8a1bae318affe3661cc071d13c9ad95e77a331a91b58a1b3a7f",
+      "check": "c1edc9ce"
+    }
+ */
+
+// Extended Public Key
+let xprv = `xprvA1WUDWFxdE5UGW1XNTnkZnd3K6bdidZBTtzvtEQziBpS3N8tajC4QKyRLmas7DK4HXK76wSXgMV1uV6RbKyM5f4uu1VmguEhAqvzQwr2mrC`;
+let parts = await b58c.decode(xprv); // TODO checksum not checked
+/*
+    {
+      "version": "0488ade4",
+      "xprv": "04832a89a60000000091dbdc89637be3d19851998ba2fac7f85b03b28a65de5c284899e7608f25ee4f0079842279eca681d40ccc86c6c618f783f4d4339c2431e4ed29e57c7b73be0c69",
+      "check": "e986668d"
+    }
+ */
 ```
 
 ### Options

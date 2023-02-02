@@ -226,8 +226,13 @@
       if (66 === key.length && "01" === key.slice(-2)) {
         //key.slice(0, 64);
         parts.compressed = true;
-      } else if (64 === key.length && parts.compressed) {
-        key += "01";
+      } else if (64 === key.length) {
+        if (parts.compressed) {
+          key += "01";
+        } else {
+          // TODO or no byte?
+          key += "00";
+        }
       } else {
         let aCompressed = "a compressed";
         if (!parts.compressed) {

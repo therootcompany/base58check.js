@@ -1,6 +1,6 @@
 {
   "name": "@dashincubator/base58check",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Base58Check & WIF for PubKeyHash and PrivateKeys",
   "main": "base58check.js",
   "bin": {
